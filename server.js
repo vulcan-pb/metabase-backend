@@ -1,51 +1,64 @@
 // server.js
-import express from 'express'
-import dotenv from 'dotenv'
-import jwt from 'jsonwebtoken'
-import cors from 'cors'
-import { createClient } from '@supabase/supabase-js'
 
-dotenv.config()
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const cors = require("cors");
+const { createClient } = require("@supabase/supabase-js");
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const METABASE_SITE = process.env.METABASE_SITE
-const METABASE_SECRET = process.env.METABASE_SECRET
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-app.post('/api/dashboard', async (req, res) => {
-  const { token } = req.body
-  if (!token) return res.status(400).json({ error: 'Missing Supabase token' })
+const METABASE_SITE_URL = process.env.METABASE_SITE_URL;
+const METABASE_SECRET_KEY = process.env.METABASE_SECRET_KEY;
 
-  const { data: { user }, error } = await supabase.auth.getUser(token)
-  if (error || !user) return res.status(401).json({ error: 'Invalid or expired token' })
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-  const email = user.email
+  const {
+    data: login,
+    error: authError,
+  } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-  const { data, error: dbError } = await supabase
-    .from('permitted_users')
-    .select('dashboard_id')
-    .eq('email', email)
-    .single()
+  if (authError || !login.session) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
 
-  if (dbError || !data) return res.status(403).json({ error: 'User not permitted' })
+  // Fetch dashboard ID from user_dashboards table
+  const { data: dashboardRow, error: fetchError } = await supabase
+    .from("user_dashboards")
+    .select("dashboard_id")
+    .eq("user_email", email)
+    .single();
 
-  const dashboardId = data.dashboard_id
+  if (fetchError || !dashboardRow) {
+    return res.status(404).json({ error: "Dashboard not assigned to user" });
+  }
 
+  const dashboardId = dashboardRow.dashboard_id;
+
+  // Create Metabase signed JWT
   const payload = {
     resource: { dashboard: dashboardId },
     params: {},
-    exp: Math.floor(Date.now() / 1000) + (10 * 60)
-  }
+    exp: Math.floor(Date.now() / 1000) + 60 * 60,
+  };
 
-  const metabaseToken = jwt.sign(payload, METABASE_SECRET)
-  const embedUrl = `${METABASE_SITE}/embed/dashboard/${metabaseToken}#bordered=true&titled=true`
+  const token = jwt.sign(payload, METABASE_SECRET_KEY);
+  const metabaseUrl = `${METABASE_SITE_URL}/embed/dashboard/${token}#bordered=true&titled=true`;
 
-  res.json({ embed_url: embedUrl })
-})
+  return res.json({ metabaseUrl });
+});
 
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
