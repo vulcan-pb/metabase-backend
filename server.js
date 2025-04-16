@@ -1,64 +1,61 @@
-// server.js
-
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const cors = require("cors");
-const { createClient } = require("@supabase/supabase-js");
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const { createClient } = require('@supabase/supabase-js'); // Supabase client
 
 const app = express();
-app.use(cors());
+const port = 5000; // Set your desired backend port
+const SUPABASE_URL = 'https://your-project.supabase.co';
+const SUPABASE_KEY = 'your-anon-key';  // Your Supabase anon key
+const JWT_SECRET_KEY = 'your-secret-key'; // Your JWT secret key
+
+// Create a Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Middleware to parse JSON body
 app.use(express.json());
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-const METABASE_SITE_URL = process.env.METABASE_SITE_URL;
-const METABASE_SECRET_KEY = process.env.METABASE_SECRET_KEY;
-
-app.post("/login", async (req, res) => {
+// Endpoint for login
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
-  const {
-    data: login,
-    error: authError,
-  } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    // Authenticate the user via Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (authError || !login.session) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    if (error || !data) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Fetch user's dashboard URL from Supabase
+    const { data: userData, error: dbError } = await supabase
+      .from('users')  // Assuming 'users' table stores the email and dashboard URL
+      .select('dashboard_url')
+      .eq('email', email)
+      .single();
+
+    if (dbError || !userData) {
+      return res.status(500).json({ error: 'Dashboard URL not found for user' });
+    }
+
+    // Create JWT payload with user info and dashboard URL
+    const payload = {
+      user_id: data.user.id,
+      email: data.user.email,
+      dashboard_url: userData.dashboard_url,  // Include the public dashboard URL
+    };
+
+    // Generate JWT token (valid for 1 hour)
+    const token = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: '1h' });
+
+    // Send the JWT back to the frontend
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
-
-  // Fetch dashboard ID from user_dashboards table
-  const { data: dashboardRow, error: fetchError } = await supabase
-    .from("user_dashboards")
-    .select("dashboard_id")
-    .eq("user_email", email)
-    .single();
-
-  if (fetchError || !dashboardRow) {
-    return res.status(404).json({ error: "Dashboard not assigned to user" });
-  }
-
-  const dashboardId = dashboardRow.dashboard_id;
-
-  // Create Metabase signed JWT
-  const payload = {
-    resource: { dashboard: dashboardId },
-    params: {},
-    exp: Math.floor(Date.now() / 1000) + 60 * 60,
-  };
-
-  const token = jwt.sign(payload, METABASE_SECRET_KEY);
-  const metabaseUrl = `${METABASE_SITE_URL}/embed/dashboard/${token}#bordered=true&titled=true`;
-
-  return res.json({ metabaseUrl });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start the Express server
+app.listen(port, () => {
+  console.log(`Backend listening on http://localhost:${port}`);
 });
