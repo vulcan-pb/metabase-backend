@@ -4,9 +4,9 @@ const { createClient } = require('@supabase/supabase-js'); // Supabase client
 
 const app = express();
 const port = 5000; // Set your desired backend port
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_KEY = 'your-anon-key';  // Your Supabase anon key
-const JWT_SECRET_KEY = 'your-secret-key'; // Your JWT secret key
+const SUPABASE_URL = 'https://hbykpjugfhvprowdazyu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhieWtwanVnZmh2cHJvd2Rhenl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzkwNTksImV4cCI6MjA2MDAxNTA1OX0.nAFNJIPbLElDM4_WmFhYAZwbzEInyAy3G5qLzqSuJdQ';  // Your Supabase anon key
+const JWT_SECRET_KEY = 'Zn5WspdU2XkZTXEG2VGU6ZEGUQbivUKkvGjpk9XwZJH5kevjZq07s0Qn8EHBUSMLweLZh30TUQDX9OObvVGXYw=='; // Your JWT secret key
 
 // Create a Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
