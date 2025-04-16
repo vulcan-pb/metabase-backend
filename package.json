@@ -1,0 +1,32 @@
+{
+  "name": "metabse-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vulcan-pb/metabase-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vulcan-pb/metabase-backend/issues"
+    },
+    
+    "engines": {
+    "node": "18.x"
+  },
+  
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2"
+    },
+  "homepage": "https://github.com/vulcan-pb/metabase-backend#readme"
+}
