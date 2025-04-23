@@ -14,7 +14,7 @@ app.post('/login', async (req, res) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('password, metabase_url')
+    .select('password,dashboard_url')
     .eq('email', email)
     .single();
 
