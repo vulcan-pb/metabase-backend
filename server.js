@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js'); // Supabase client
+const cors = require('cors');
 
 const app = express();
 const port = 5000; // Set your desired backend port
@@ -13,6 +14,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Middleware to parse JSON body
 app.use(express.json());
+app.use(cors());  // Enable CORS to allow frontend access
 
 // Endpoint for login
 app.post('/api/login', async (req, res) => {
@@ -56,8 +58,6 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Start the Express server
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
 });
