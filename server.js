@@ -26,7 +26,7 @@ app.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Incorrect password' });
   }
 
-  return res.json({ metabase_url: user.metabase_url });
+  return res.json({ dashboard_url: user.dashboard_url });
 });
 
 const PORT = process.env.PORT || 5000;
