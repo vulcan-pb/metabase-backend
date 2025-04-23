@@ -2,7 +2,9 @@ require('dotenv').config();  // Load environment variables from .env file
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js'); // Supabase client
+
 const cors = require('cors'); // CORS middleware
+
 
 const app = express();
 const port = process.env.PORT || 5000; // Set your desired backend port
@@ -17,6 +19,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Middleware to parse JSON body
 app.use(express.json());
+app.use(cors());  // Enable CORS to allow frontend access
 
 // Enable CORS for all origins (you can specify frontend URL to restrict access)
 app.use(cors({
