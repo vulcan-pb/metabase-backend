@@ -1,18 +1,29 @@
+require('dotenv').config();  // Load environment variables from .env file
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js'); // Supabase client
+const cors = require('cors'); // CORS middleware
 
 const app = express();
-const port = 5000; // Set your desired backend port
-const SUPABASE_URL = 'https://hbykpjugfhvprowdazyu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhieWtwanVnZmh2cHJvd2Rhenl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzkwNTksImV4cCI6MjA2MDAxNTA1OX0.nAFNJIPbLElDM4_WmFhYAZwbzEInyAy3G5qLzqSuJdQ';  // Your Supabase anon key
-const JWT_SECRET_KEY = 'Zn5WspdU2XkZTXEG2VGU6ZEGUQbivUKkvGjpk9XwZJH5kevjZq07s0Qn8EHBUSMLweLZh30TUQDX9OObvVGXYw=='; // Your JWT secret key
+const port = process.env.PORT || 5000; // Set your desired backend port
+
+// Load Supabase and JWT credentials from environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 // Create a Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Middleware to parse JSON body
 app.use(express.json());
+
+// Enable CORS for all origins (you can specify frontend URL to restrict access)
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',  // Use the frontend URL from the environment file
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Endpoint for login
 app.post('/api/login', async (req, res) => {
@@ -56,6 +67,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Start the Express server
-app.listen(port, () => {
-  console.log(`Backend listening on http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
 });
+
